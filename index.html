@@ -1,1 +1,62 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>動画無限ループ</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; background-color: #000; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    #container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
+    video { width: 100%; height: 100%; object-fit: contain; display: none; }
+    #controls { position: absolute; z-index: 10; text-align: center; color: #fff; }
+    .btn { background: rgba(255, 255, 255, 0.2); border: 1px solid #fff; color: #fff; padding: 12px 24px; border-radius: 24px; font-size: 16px; backdrop-filter: blur(5px); cursor: pointer; }
+    #file-input { display: none; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="controls">
+      <button class="btn" onclick="document.getElementById('file-input').click()">動画ファイルをえらぶ</button>
+      <input type="file" id="file-input" accept="video/*">
+    </div>
+    <video id="v1" playsinline loop muted></video>
+    <video id="v2" playsinline loop muted></video>
+  </div>
+
+  <script>
+    const input = document.getElementById('file-input');
+    const controls = document.getElementById('controls');
+    const v1 = document.getElementById('v1');
+    const v2 = document.getElementById('v2');
+    let current = v1, next = v2;
+
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      v1.src = url; v2.src = url;
+      v1.load(); v2.load();
+      controls.style.display = 'none';
+      v1.style.display = 'block';
+      v1.play();
+    });
+
+    [v1, v2].forEach(v => {
+      v.addEventListener('timeupdate', () => {
+        if (v.duration - v.currentTime < 0.2 && next.paused) {
+          next.currentTime = 0;
+          next.play();
+          next.style.display = 'block';
+          current.style.display = 'none';
+          current.pause();
+          [current, next] = [next, current];
+        }
+      });
+    });
+  </script>
+</body>
+</html>
